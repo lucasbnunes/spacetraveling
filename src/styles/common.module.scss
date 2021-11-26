@@ -1,1 +1,10 @@
-// TODO
+@use 'sass:math';
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+@function pxToRem($size) {
+  @return math.div($size, 16) * 1rem;
+}
