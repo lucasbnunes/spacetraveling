@@ -1,5 +1,6 @@
 import { GetStaticProps } from 'next';
 import Link from 'next/link';
+import Prismic from '@prismicio/client';
 
 import { getPrismicClient } from '../services/prismic';
 
@@ -7,6 +8,7 @@ import { FiCalendar, FiUser } from 'react-icons/fi';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
+import { RichText } from 'prismic-dom';
 
 interface Post {
   uid?: string;
@@ -27,75 +29,69 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home() {
+export default function Home({ postsPagination }: HomeProps) {
   return (
     <div className={commonStyles.container}>
       <img src="/images/logo.png" className={styles.logo} />
 
       <ul>
-        <li className={styles.post}>
-          <Link href="/" passHref>
-            <a>
-              <h2>Título do post</h2>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+        {postsPagination.results.map(post => (
+          <li className={styles.post} key={post.uid}>
+            <Link href={`/post/${post.uid}`} passHref>
+              <a>
+                <h2>{post.data.title}</h2>
+                <p>{post.data.subtitle}</p>
 
-              <div className={styles.postInfo}>
-                <span>
-                  <FiCalendar /> 19 Abr 2021
-                </span>
-                <span>
-                  <FiUser /> John Doe
-                </span>
-              </div>
-            </a>
-          </Link>
-        </li>
-
-        <li className={styles.post}>
-          <Link href="/" passHref>
-            <a>
-              <h2>Título do post</h2>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-
-              <div className={styles.postInfo}>
-                <span>
-                  <FiCalendar /> 19 Abr 2021
-                </span>
-                <span>
-                  <FiUser /> John Doe
-                </span>
-              </div>
-            </a>
-          </Link>
-        </li>
-
-        <li className={styles.post}>
-          <Link href="/" passHref>
-            <a>
-              <h2>Título do post</h2>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-
-              <div className={styles.postInfo}>
-                <span>
-                  <FiCalendar /> 19 Abr 2021
-                </span>
-                <span>
-                  <FiUser /> John Doe
-                </span>
-              </div>
-            </a>
-          </Link>
-        </li>
+                <div className={styles.postInfo}>
+                  <span>
+                    <FiCalendar /> {post.first_publication_date}
+                  </span>
+                  <span>
+                    <FiUser /> {post.data.author}
+                  </span>
+                </div>
+              </a>
+            </Link>
+          </li>
+        ))}
       </ul>
 
-      <button className={styles.button}>Carregar mais posts</button>
+      {postsPagination.next_page && (
+        <button className={styles.button}>Carregar mais posts</button>
+      )}
     </div>
   );
 }
 
-// export const getStaticProps = async () => {
-//   // const prismic = getPrismicClient();
-//   // const postsResponse = await prismic.query(TODO);
+export const getStaticProps: GetStaticProps = async () => {
+  const prismic = getPrismicClient();
+  const postsResponse = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts'),
+    { pageSize: 5 }
+  );
 
-//   // TODO
-// };
+  const posts: Post[] = postsResponse.results.map(post => ({
+    uid: post.uid,
+    data: {
+      title: post.data.title,
+      subtitle: post.data.subtitle,
+      author: post.data.author,
+    },
+    first_publication_date: new Date(post.first_publication_date)
+      .toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+      .replace(/de|\./g, ' '),
+  }));
+
+  return {
+    props: {
+      postsPagination: {
+        next_page: postsResponse.next_page,
+        results: posts,
+      },
+    },
+  };
+};
