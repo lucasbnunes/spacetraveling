@@ -1,6 +1,8 @@
 import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import Prismic from '@prismicio/client';
+import { format } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR';
 
 import { getPrismicClient } from '../services/prismic';
 
@@ -8,7 +10,7 @@ import { FiCalendar, FiUser } from 'react-icons/fi';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
-import { RichText } from 'prismic-dom';
+import { useEffect, useState } from 'react';
 
 interface Post {
   uid?: string;
@@ -30,12 +32,35 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps) {
+  const [posts, setPosts] = useState(postsPagination.results);
+  const [nextPageURL, setNextPageURL] = useState(postsPagination.next_page);
+
+  function formatDate(date: string) {
+    return format(new Date(date), 'dd LLL yyyy', {
+      locale: ptBR,
+    });
+  }
+
+  async function getNextPage() {
+    const response = await fetch(nextPageURL);
+    const newData = await response.json();
+
+    const newPosts: Post[] = newData.results.map(post => ({
+      uid: post.uid,
+      data: post.data,
+      first_publication_date: post.first_publication_date,
+    }));
+
+    setPosts([...posts, ...newPosts]);
+    setNextPageURL(newData.next_page);
+  }
+
   return (
     <div className={commonStyles.container}>
       <img src="/images/logo.png" className={styles.logo} />
 
       <ul>
-        {postsPagination.results.map(post => (
+        {posts.map(post => (
           <li className={styles.post} key={post.uid}>
             <Link href={`/post/${post.uid}`} passHref>
               <a>
@@ -44,7 +69,7 @@ export default function Home({ postsPagination }: HomeProps) {
 
                 <div className={styles.postInfo}>
                   <span>
-                    <FiCalendar /> {post.first_publication_date}
+                    <FiCalendar /> {formatDate(post.first_publication_date)}
                   </span>
                   <span>
                     <FiUser /> {post.data.author}
@@ -56,8 +81,10 @@ export default function Home({ postsPagination }: HomeProps) {
         ))}
       </ul>
 
-      {postsPagination.next_page && (
-        <button className={styles.button}>Carregar mais posts</button>
+      {nextPageURL && (
+        <button className={styles.button} onClick={getNextPage}>
+          Carregar mais posts
+        </button>
       )}
     </div>
   );
@@ -77,13 +104,7 @@ export const getStaticProps: GetStaticProps = async () => {
       subtitle: post.data.subtitle,
       author: post.data.author,
     },
-    first_publication_date: new Date(post.first_publication_date)
-      .toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-      .replace(/de|\./g, ' '),
+    first_publication_date: post.first_publication_date,
   }));
 
   return {
