@@ -1,5 +1,26 @@
 @import '../styles/common.module.scss';
 
+body {
+  min-height: 100vh;
+  background-color: red;
+}
+
+.fallbackContainer {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.fallback {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
 .logo {
   margin-top: pxToRem(80);
   margin-bottom: pxToRem(64);

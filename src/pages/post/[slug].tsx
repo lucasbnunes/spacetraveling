@@ -12,6 +12,7 @@ import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
+import { useRouter } from 'next/router';
 
 interface Post {
   first_publication_date: string | null;
@@ -37,9 +38,20 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
-  const readingTime = calculateReadingTime();
+  const router = useRouter();
 
-  function calculateReadingTime() {
+  if (router.isFallback) {
+    return (
+      <div>
+        <Header />
+        <span>Carregando...</span>
+      </div>
+    );
+  }
+
+  const readingTime = calculateReadingTime(post);
+
+  function calculateReadingTime(post: Post) {
     const totalWords = post.data.content.reduce((acc, curr) => {
       const wordsHeading = curr.heading.split(' ');
       const wordsBody = curr.body.reduce((acc, curr) => {
