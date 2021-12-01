@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Prismic from '@prismicio/client';
 import { RichText } from 'prismic-dom';
 import Header from '../../components/Header';
 
@@ -38,8 +39,22 @@ export default function Post({ post }: PostProps) {
   );
 }
 
-export const getStaticPaths = () => {
-  return { paths: [], fallback: 'blocking' };
+export const getStaticPaths: GetStaticPaths = async () => {
+  const prismic = getPrismicClient();
+  const posts = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts'),
+    {
+      fetch: 'posts.uid',
+      pageSize: 5,
+    }
+  );
+
+  const paths = posts.results.map(post => ({ params: { slug: post.uid } }));
+
+  return {
+    paths,
+    fallback: true,
+  };
 };
 
 export const getStaticProps = async context => {
