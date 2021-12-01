@@ -1,8 +1,14 @@
+import Link from 'next/link';
 import styles from './header.module.scss';
+
 export default function Header() {
   return (
-    <header className={styles.header}>
-      <img src="/images/logo.png" alt="spacetraveling" />
-    </header>
+    <Link href="/" passHref>
+      <a>
+        <header className={styles.header}>
+          <img src="/images/logo.png" alt="logo" />
+        </header>
+      </a>
+    </Link>
   );
 }
