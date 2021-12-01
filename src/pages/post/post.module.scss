@@ -1,1 +1,51 @@
-// TODO
+@import '../../styles/common.module.scss';
+
+.banner {
+  height: 400px;
+  width: 100%;
+  object-fit: cover;
+
+  margin-bottom: 80px;
+}
+
+.post {
+  h1 {
+    font-size: pxToRem(48);
+  }
+
+  .content {
+    h2 {
+      font-size: pxToRem(36);
+      margin-bottom: pxToRem(48);
+    }
+  }
+  .content + .content {
+    h2 {
+      margin-top: pxToRem(48);
+    }
+  }
+}
+
+.postInfo {
+  margin-top: pxToRem(24);
+  margin-bottom: pxToRem(64);
+
+  color: var(--info);
+  font-size: pxToRem(14);
+
+  display: flex;
+
+  span {
+    display: flex;
+    align-items: center;
+  }
+
+  span + span {
+    margin-left: pxToRem(26);
+  }
+
+  svg {
+    font-size: pxToRem(20);
+    margin-right: pxToRem(8);
+  }
+}

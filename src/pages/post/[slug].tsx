@@ -1,12 +1,17 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Prismic from '@prismicio/client';
 import { RichText } from 'prismic-dom';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 import Header from '../../components/Header';
 
 import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+
+import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 
 interface Post {
   first_publication_date: string | null;
@@ -32,10 +37,64 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
+  const readingTime = calculateReadingTime();
+
+  function calculateReadingTime() {
+    const totalWords = post.data.content.reduce((acc, curr) => {
+      const wordsHeading = curr.heading.split(' ');
+      const wordsBody = curr.body.reduce((acc, curr) => {
+        const words = curr.text.split(' ');
+
+        return acc + words.length;
+      }, 0);
+
+      return (acc += wordsHeading.length + wordsBody);
+    }, 0);
+
+    return Math.ceil(totalWords / 200);
+  }
+
   return (
-    <div className={commonStyles.container}>
+    <>
       <Header />
-    </div>
+
+      <img src={post.data.banner.url} className={styles.banner} />
+
+      <div className={`${commonStyles.container} ${styles.post}`}>
+        <h1>{post.data.title}</h1>
+
+        <div className={styles.postInfo}>
+          <span>
+            <FiCalendar />
+            {format(new Date(post.first_publication_date), 'dd LLL yyyy', {
+              locale: ptBR,
+            })}
+          </span>
+          <span>
+            <FiUser />
+            {post.data.author}
+          </span>
+          <span>
+            <FiClock />
+            {readingTime} min
+          </span>
+        </div>
+
+        {post.data.content.map(content => (
+          <div
+            key={content.heading.replace(/\s+/g, '')}
+            className={styles.content}
+          >
+            <h2>{content.heading}</h2>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: String(RichText.asHtml(content.body)),
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
