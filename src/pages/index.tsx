@@ -114,5 +114,6 @@ export const getStaticProps: GetStaticProps = async () => {
         results: posts,
       },
     },
+    revalidate: 60 * 30, // 30 minutes
   };
 };
